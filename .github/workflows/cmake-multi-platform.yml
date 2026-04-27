@@ -1,0 +1,65 @@
+name: Build CBCTool-Qt
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        build_type: [Release]
+        c_compiler: [gcc, cl]
+        include:
+          - os: windows-latest
+            c_compiler: cl
+            cpp_compiler: cl
+          - os: ubuntu-latest
+            c_compiler: gcc
+            cpp_compiler: g++
+        exclude:
+          - os: windows-latest
+            c_compiler: gcc
+          - os: ubuntu-latest
+            c_compiler: cl
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: '6.5.3'
+        modules: 'qtcore qtwidgets'
+        cache: true
+
+    - name: Install Linux dependencies
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgl1-mesa-dev libxcb-util-dev libxcb-icccm4-dev libxcb-keysyms1-dev libxcb-randr0-dev
+
+    - name: Configure CMake
+      run: >
+        cmake -B ${{ github.workspace }}/build
+        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -S ${{ github.workspace }}
+
+    - name: Build
+      run: cmake --build ${{ github.workspace }}/build --config ${{ matrix.build_type }}
+
+    - name: Install (Deploy Qt dependencies)
+      run: cmake --install ${{ github.workspace }}/build --config ${{ matrix.build_type }} --prefix ./artifact
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: CBCTool-Qt-${{ matrix.os }}-${{ matrix.build_type }}
+        path: ./artifact
