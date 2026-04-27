@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.19)
 project(CBCTool-Qt LANGUAGES CXX)
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/APP/bin)
+
 find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets)
 
 qt_standard_project_setup()

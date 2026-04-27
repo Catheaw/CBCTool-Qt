@@ -8,7 +8,8 @@ class TrajectoryCalculator
 public:
     static const double angle_step; // 初始化
 
-    std::string findOptimalAngles(double targetDistance, double targetY, double n, double k, int distanceType);
+    std::string findOptimalAngles(double targetDistance, double targetY, double n, double k, int distanceType,
+    const std::pair<int,int>& lowRange, const std::pair<int,int>& highRange);
 
 private:
     double calculateY(double x, double t, double n, double k);

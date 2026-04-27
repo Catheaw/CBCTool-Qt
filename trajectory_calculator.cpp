@@ -7,8 +7,10 @@
 
 const double TrajectoryCalculator::angle_step = 0.01; // 初始化
 
-std::string TrajectoryCalculator::findOptimalAngles(double targetDistance, double targetY, double n, double k, int distanceType)
+std::string TrajectoryCalculator::findOptimalAngles(double targetDistance, double targetY, double n, double k, int distanceType,
+const std::pair<int,int>& lowRange, const std::pair<int,int>& highRange)
 {
+    //计算前的检查
     double x;
     if (distanceType == 1) {
         x = targetDistance;
@@ -25,9 +27,12 @@ std::string TrajectoryCalculator::findOptimalAngles(double targetDistance, doubl
         throw std::invalid_argument("装药必须大于0且炮座前部长度不能小于0");
     }
 
-    const double precision_threshold = 3;
+    //开始计算
+    const double precision_threshold = 3; // 可接受的误差
     std::string results;
-    const std::pair<int, int> ranges[2] = {{-30, 30}, {30, 60}};
+    // const std::pair<int, int> ranges[2] = {{-30, 30}, {30, 60}};
+    std::pair<int,int> ranges[2] = {lowRange, highRange};
+    const char* descriptions[2] = {"低弹道", "高弹道"};
     for (const auto& angle_range : ranges) {
         double min_diff = std::numeric_limits<double>::max();
         double best_t = -100;
@@ -61,9 +66,10 @@ std::string TrajectoryCalculator::findOptimalAngles(double targetDistance, doubl
     return results;
 }
 
+// 计算
 double TrajectoryCalculator::calculateY(double x, double t, double n, double k)
 {
-    double radian_t = t * M_PI / 180.0;
+    double radian_t = t * M_PI / 180.0; //计算弧度
     return ((5 / std::cos(radian_t)) / (2 * n) + std::tan(radian_t)) * x +
            500 * std::log(1 - (x / std::cos(radian_t) - k) / (200 * n)) -
            (5 * k / (2 * n)) + 2;

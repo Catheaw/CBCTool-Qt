@@ -7,12 +7,16 @@
 #include <QLineEdit>
 #include <QLabel>
 #include <QPushButton>
+#include <QSpinBox>
+#include <QPointer>
 #include <cmath>  // 用于 std::sqrt, std::pow
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , calculator(TrajectoryCalculator())
+    , lowRange({-30, 30})      // 默认低弹道范围
+    , highRange({30, 60})      // 默认高弹道范围
 {
     ui->setupUi(this);
 
@@ -26,6 +30,7 @@ MainWindow::MainWindow(QWidget *parent)
     // 连接按钮点击事件
     connect(ui->startbutton, &QPushButton::clicked, this, &MainWindow::calculateAngles, Qt::QueuedConnection);
     connect(ui->coordButton, &QPushButton::clicked, this, &MainWindow::inputCoordinates, Qt::QueuedConnection);
+    connect(ui->RangeButton, &QPushButton::clicked, this, &MainWindow::onRangeButtonClicked);
 }
 
 MainWindow::~MainWindow()
@@ -76,7 +81,7 @@ void MainWindow::calculateAngles()
         ui->startbutton->setEnabled(false); // 禁用按钮防止重复点击
 
         // 调用计算器计算最优角度
-        std::string resultText = calculator.findOptimalAngles(targetDistance, targetY, n, k, distanceType);
+        std::string resultText = calculator.findOptimalAngles(targetDistance, targetY, n, k, distanceType, lowRange, highRange);
         ui->resultlabel->setText(QString::fromStdString(resultText).replace("\n", "<br>"));
 
     } catch (const std::exception& e) {
@@ -115,8 +120,10 @@ void MainWindow::inputCoordinates()
     layout->addWidget(okButton);
     layout->addWidget(cancelButton);
 
-    // Lambda 捕获所有 by reference，并处理坐标转换
-    connect(okButton, &QPushButton::clicked, this, [this, &dialog, selfXEdit, selfYEdit, selfZEdit, targetXEdit, targetYEdit, targetZEdit]() {
+    // 用坐标计算距离
+    QPointer<QDialog> dialogPtr(&dialog);
+    connect(okButton, &QPushButton::clicked, this, [this, dialogPtr, selfXEdit, selfYEdit, selfZEdit, targetXEdit, targetYEdit, targetZEdit]() {
+        if (dialogPtr.isNull()) return;
         bool ok;
         double selfX = 0.0, selfY = 0.0, selfZ = 0.0;
         double targetX = 0.0, targetY = 0.0, targetZ = 0.0;
@@ -154,14 +161,66 @@ void MainWindow::inputCoordinates()
         double height = targetY - selfY;
 
         // 更新主界面字段
-        ui->distanceedit->setText(QString::number(distance, 'f', 6)); // 保留6位小数
-        ui->yedit->setText(QString::number(height, 'f', 6));
+        ui->distanceedit->setText(QString::number(distance, 'f', 2)); // 保留2位小数
+        ui->yedit->setText(QString::number(height, 'f', 2));
         ui->distancerb->setChecked(true); // 切换为“水平距离”模式
 
-        dialog.accept(); // 关闭对话框
+        dialogPtr->accept(); // 关闭对话框
     });
 
     connect(cancelButton, &QPushButton::clicked, &dialog, &QDialog::reject);
 
     dialog.exec(); // 使用模态方式运行
+}
+
+void MainWindow::onRangeButtonClicked()
+{
+    QDialog dialog(this);
+    dialog.setWindowTitle("设置俯仰角范围");
+
+    QFormLayout *layout = new QFormLayout(&dialog);
+
+    // 低弹道范围输入框
+    QSpinBox *lowStart = new QSpinBox(&dialog);
+    lowStart->setRange(-90, 90);
+    lowStart->setValue(lowRange.first);
+    QSpinBox *lowEnd = new QSpinBox(&dialog);
+    lowEnd->setRange(-90, 90);
+    lowEnd->setValue(lowRange.second);
+
+    // 高弹道范围输入框
+    QSpinBox *highStart = new QSpinBox(&dialog);
+    highStart->setRange(-90, 90);
+    highStart->setValue(highRange.first);
+    QSpinBox *highEnd = new QSpinBox(&dialog);
+    highEnd->setRange(-90, 90);
+    highEnd->setValue(highRange.second);
+
+    layout->addRow("低弹道起始角度:", lowStart);
+    layout->addRow("低弹道结束角度:", lowEnd);
+    layout->addRow("高弹道起始角度:", highStart);
+    layout->addRow("高弹道结束角度:", highEnd);
+
+    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+    layout->addRow(buttonBox);
+
+    // 确定按钮处理
+    connect(buttonBox, &QDialogButtonBox::accepted, &dialog, [&]() {
+        // 有效性检查
+        if (lowStart->value() > lowEnd->value()) {
+            QMessageBox::warning(&dialog, "无效范围", "低弹道起始角度不能大于结束角度");
+            return;
+        }
+        if (highStart->value() > highEnd->value()) {
+            QMessageBox::warning(&dialog, "无效范围", "高弹道起始角度不能大于结束角度");
+            return;
+        }
+        // 更新成员变量
+        lowRange = {lowStart->value(), lowEnd->value()};
+        highRange = {highStart->value(), highEnd->value()};
+        dialog.accept();
+    });
+
+    connect(buttonBox, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+    dialog.exec();
 }

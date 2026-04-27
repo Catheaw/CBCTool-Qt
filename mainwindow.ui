@@ -219,6 +219,19 @@
      <set>Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignTop</set>
     </property>
    </widget>
+   <widget class="QPushButton" name="RangeButton">
+    <property name="geometry">
+     <rect>
+      <x>210</x>
+      <y>310</y>
+      <width>80</width>
+      <height>35</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>俯仰角范围</string>
+    </property>
+   </widget>
   </widget>
  </widget>
  <resources/>
