@@ -41,7 +41,7 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update
-        sudo apt-get install -y libgl1-mesa-dev libxcb-util-dev libxcb-icccm4-dev libxcb-keysyms1-dev libxcb-randr0-dev
+        sudo apt-get install -y libgl1-mesa-dev libxcb-util-dev libxcb-icccm4-dev libxcb-keysyms1-dev libxcb-randr0-dev libwayland-dev wayland-protocols weston libxkbcommon-dev libwayland-egl-backend-dev
 
     - name: Configure CMake
       run: >
