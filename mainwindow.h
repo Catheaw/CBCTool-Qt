@@ -10,6 +10,7 @@
 #include <QDoubleValidator>
 #include <QMessageBox>
 #include <QDialog>
+#include <QDialogButtonBox>
 #include <utility>   // for std::pair
 #include "trajectory_calculator.h"
 
