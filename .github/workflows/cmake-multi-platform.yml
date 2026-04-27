@@ -55,10 +55,10 @@ jobs:
       run: cmake --build ${{ github.workspace }}/build --config ${{ matrix.build_type }}
 
     - name: Install (Deploy Qt dependencies)
-      run: cmake --install ${{ github.workspace }}/build --config ${{ matrix.build_type }} --prefix ./artifact
+      run: cmake --install ${{ github.workspace }}/build --config ${{ matrix.build_type }} --prefix ${{ github.workspace }}/artifact
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: CBCTool-Qt-${{ matrix.os }}-${{ matrix.build_type }}
-        path: ./artifact
+        path: ${{ github.workspace }}/artifact
