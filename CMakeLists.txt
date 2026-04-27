@@ -21,6 +21,8 @@ target_link_libraries(CBCTool-Qt
         Qt::Widgets
 )
 
+target_compile_definitions(CBCTool-Qt PRIVATE _USE_MATH_DEFINES)
+
 install(TARGETS CBCTool-Qt
     BUNDLE  DESTINATION .
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
